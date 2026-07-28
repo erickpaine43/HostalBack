@@ -1,0 +1,139 @@
+# ASP.NET Core / .NET
+bin/
+obj/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio cache files
+.vs/
+*.dbmdl
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+packages/
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+!**/[Pp]ackages/repositories.config
+*.nuget.props
+*.nuget.targets
+
+# Build results
+*.log
+*.vspscc
+*.vssscc
+*.cache
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlh
+*.tli
+*.tmp
+*.tmp_proj
+*.log
+*.user
+*.bak
+*.backup
+*.orig
+*.psess
+*.vsp
+*.vsps
+*.webtest
+
+# Publish outputs
+publish/
+*.publishsettings
+
+# IIS Express
+.iisExpress/
+
+# Azure DevOps
+*.builds
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Visual Studio Code
+.vscode/
+.history/
+
+# Rider caches
+.idea/
+*.sln.iml
+
+# Entity Framework
+*.db
+*.sqlce
+
+# Local history and temp files
+~$*
+*.tmp
+*.temp
+
+# User-specific files
+*.userprefs
+
+# dotCover
+*.dotCover
+
+# Test results
+TestResults/
+
+# Paket
+.paket/
+.paketruck?
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Mono Auto Generated Files
+mono_crash.*
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Assemblies
+*.dll
+*.exe
+*.dll.config
+
+# Resx
+*.resx
+
+# Publish Web
+*.Publish.xml
+
+# Local NuGet cache
+.nuget/
+
+# Entity Framework Migrations metadata
+*.edmx.sql
+*.dbo.sql
+
+# Microsoft Azure Web App publish settings
+*.azurePubxml
+
+# User secrets
+secrets.json
+appsettings.Development.json
+
+# static web assets
+*.staticwebassets.cache

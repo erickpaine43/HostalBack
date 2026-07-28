@@ -1,0 +1,6 @@
+@VistaAzul_HostAddress = http://localhost:5092
+
+GET {{VistaAzul_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
