@@ -16,25 +16,21 @@ namespace VistaAzul.Modelos
         {
             base.OnModelCreating(modelBuilder);
 
-            // CI único para clientes
             modelBuilder.Entity<Cliente>()
                 .HasIndex(c => c.CI)
                 .IsUnique();
 
-            // CI único para amas de llaves
             modelBuilder.Entity<AmaDeLlaves>()
                 .HasIndex(a => a.CI)
                 .IsUnique();
 
-            // Relación many-to-many Habitacion <-> AmaDeLlaves
             modelBuilder.Entity<Habitacion>()
                 .HasMany(h => h.AmasDeLlaves)
                 .WithMany(a => a.Habitaciones)
                 .UsingEntity(j => j.ToTable("HabitacionAmaDeLlaves"));
 
             // --- SEED DATA ---
-
-            // 15 habitaciones: 3 pisos x 5 habitaciones, formato 0XY (ej: 11=piso1-hab1, 35=piso3-hab5)
+            /*
             var habitacionesSeed = new List<Habitacion>();
             for (int piso = 1; piso <= 3; piso++)
                 for (int hab = 1; hab <= 5; hab++)
@@ -52,6 +48,7 @@ namespace VistaAzul.Modelos
                 new AmaDeLlaves { Id = 1, NombreApellidos = "Elena Garcia Fernandez", CI = "85031445678", NumeroTelefono = "+5353334445" },
                 new AmaDeLlaves { Id = 2, NombreApellidos = "Rosa Martinez Perez",    CI = "89110298765", NumeroTelefono = "+5355556667" }
             );
+            */
         }
     }
 }

@@ -18,9 +18,15 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSwaggerGen();
+}
 
 var app = builder.Build();
+
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.UseMiddleware<VistaAzul.Middlewares.ErrorHandlingMiddleware>();
 
