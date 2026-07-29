@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using VistaAzul.Modelos;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args
+});
 
 builder.Services.AddDbContext<VistaAzulDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
