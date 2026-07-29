@@ -113,13 +113,28 @@ namespace VistaAzul.Controllers
         }
 
         [HttpGet("auditoria-trazas")]
-        public async Task<ActionResult<IEnumerable<Traza>>> GetTrazas()
+        public async Task<ActionResult> GetTrazas(
+           [FromQuery] int page = 1,
+           [FromQuery] int pageSize = 10)
         {
-            var trazas = await _context.Trazas
-                .OrderByDescending(t => t.FechaHora)
+            var query = _context.Trazas
+                .OrderByDescending(t => t.FechaHora);
+
+            int total = await query.CountAsync();
+
+            var trazas = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return Ok(trazas);
+            return Ok(new
+            {
+                total,
+                pagina = page,
+                tamanioPagina = pageSize,
+                totalPaginas = (int)Math.Ceiling((double)total / pageSize),
+                datos = trazas
+            });
         }
     }
 }
