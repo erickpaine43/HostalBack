@@ -17,7 +17,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",
                 "http://localhost:5173",
                 "http://127.0.0.1:5500",
-                "https://hostalfront.netlify.app"
+                "https://hostalfront.netlify.app",
+                "https://hostal-front.vercel.app"
             )
             .AllowAnyMethod()
             .AllowAnyHeader();
