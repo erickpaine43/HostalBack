@@ -204,6 +204,8 @@ namespace VistaAzul.Controllers
                 .FirstOrDefaultAsync(c => c.Id == dto.ClienteId);
             if (cliente == null)
                 return NotFound("El cliente no existe.");
+            if (dto.FechaEntrada.Date < DateTime.Today)
+                return BadRequest("La fecha de entrada no puede ser anterior a la fecha actual.");
 
             if (dto.FechaEntrada >= dto.FechaSalida)
                 return BadRequest("La fecha de entrada debe ser menor que la fecha de salida.");
