@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VistaAzul.Modelos;
 
@@ -11,9 +12,11 @@ using VistaAzul.Modelos;
 namespace VistaAzul.Migrations
 {
     [DbContext(typeof(VistaAzulDbContext))]
-    partial class VistaAzulDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260816140240_cambioDeValorADecimal")]
+    partial class cambioDeValorADecimal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,22 +69,6 @@ namespace VistaAzul.Migrations
                         .IsUnique();
 
                     b.ToTable("AmasDeLlaves");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CI = "85031445678",
-                            NombreApellidos = "Elena Garcia Fernandez",
-                            NumeroTelefono = "+5353334445"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CI = "89110298765",
-                            NombreApellidos = "Rosa Martinez Perez",
-                            NumeroTelefono = "+5355556667"
-                        });
                 });
 
             modelBuilder.Entity("VistaAzul.Modelos.Cliente", b =>
@@ -116,32 +103,6 @@ namespace VistaAzul.Migrations
                         .IsUnique();
 
                     b.ToTable("Clientes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CI = "99010212345",
-                            EsVIP = false,
-                            NombreApellidos = "Juan Perez Gomez",
-                            NumeroTelefono = "+5352345678"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CI = "95051254321",
-                            EsVIP = true,
-                            NombreApellidos = "Maria Carmen Rodriguez",
-                            NumeroTelefono = "+5358765432"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CI = "98122598765",
-                            EsVIP = false,
-                            NombreApellidos = "Carlos Diaz Gutierrez",
-                            NumeroTelefono = "+5351112223"
-                        });
                 });
 
             modelBuilder.Entity("VistaAzul.Modelos.Habitacion", b =>
@@ -155,83 +116,6 @@ namespace VistaAzul.Migrations
                     b.HasKey("Numero");
 
                     b.ToTable("Habitaciones");
-
-                    b.HasData(
-                        new
-                        {
-                            Numero = 11,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 12,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 13,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 14,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 15,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 21,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 22,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 23,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 24,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 25,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 31,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 32,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 33,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 34,
-                            EstaFueraDeServicio = false
-                        },
-                        new
-                        {
-                            Numero = 35,
-                            EstaFueraDeServicio = false
-                        });
                 });
 
             modelBuilder.Entity("VistaAzul.Modelos.Reserva", b =>
@@ -267,7 +151,7 @@ namespace VistaAzul.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Importe")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2");
 
                     b.Property<string>("MotivoCancelacion")
                         .HasMaxLength(500)

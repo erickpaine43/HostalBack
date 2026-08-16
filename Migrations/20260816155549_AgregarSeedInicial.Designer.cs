@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VistaAzul.Modelos;
 
@@ -11,9 +12,11 @@ using VistaAzul.Modelos;
 namespace VistaAzul.Migrations
 {
     [DbContext(typeof(VistaAzulDbContext))]
-    partial class VistaAzulDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260816155549_AgregarSeedInicial")]
+    partial class AgregarSeedInicial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -8,7 +8,7 @@ namespace VistaAzul.Dto
         public DateTime FechaReservacion { get; set; }
         public DateTime FechaEntrada { get; set; }
         public DateTime FechaSalida { get; set; }
-        public double Importe { get; set; }
+        public decimal Importe { get; set; }
 
         public int ClienteId { get; set; }
         public string ClienteNombre { get; set; } = null!;

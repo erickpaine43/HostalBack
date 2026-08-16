@@ -126,65 +126,6 @@ namespace VistaAzul.Controllers
             return Ok($"Habitacion {id} actualizada con exito.");
         }
 
-        // POST: api/Habitaciones
-        [HttpPost]
-        public async Task<ActionResult<HabitacionDto>> PostHabitacion(HabitacionDto dto)
-        {
-            int numero = dto.Numero;
-            int piso = numero / 10;
-            int hab  = numero % 10;
-            // Formato 0XY: X es el piso (1-3), Y es la habitación en el piso (1-5)
-            // Representado como entero: 11-15 (piso 1), 21-25 (piso 2), 31-35 (piso 3)
-            if (piso < 1 || piso > 3 || hab < 1 || hab > 5)
-            {
-                return BadRequest("El número de habitación debe seguir el formato 0XY: piso X entre 1 y 3, habitación Y entre 1 y 5 (ej: 11, 23, 35).");
-            }
-
-            var habitacion = new Habitacion
-            {
-                Numero              = dto.Numero,
-                EstaFueraDeServicio = dto.EstaFueraDeServicio
-            };
-
-            _context.Habitaciones.Add(habitacion);
-            try
-            {
-                await _context.SaveChangesAsync();
-
-                var traza = new Traza
-                {
-                    FechaHora    = DateTime.Now,
-                    Operacion    = "CREAR_HABITACION",
-                    TablaAfectada = "Habitaciones",
-                    RegistroId   = habitacion.Numero.ToString(),
-                    Detalles     = $"Se registro la nueva habitacion numero {habitacion.Numero} en el sistema."
-                };
-                _context.Trazas.Add(traza);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (HabitacionExists(habitacion.Numero))
-                {
-                    return Conflict($"La habitacion numero {habitacion.Numero} ya se encuentra registrada.");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            var resultadoDto = new HabitacionDto
-            {
-                Numero              = habitacion.Numero,
-                EstaFueraDeServicio = habitacion.EstaFueraDeServicio,
-                AmasDeLlavesIds     = new List<int>(),
-                AmasDeLlavesNombres = new List<string>()
-            };
-
-            return CreatedAtAction("GetHabitacion", new { id = resultadoDto.Numero }, resultadoDto);
-        }
-
         // POST: api/Habitaciones/5/asignar-ama/3
         [HttpPost("{habitacionId}/asignar-ama/{amaDeLlavesId}")]
         public async Task<IActionResult> AsignarAmaDeLlaves(int habitacionId, int amaDeLlavesId)
