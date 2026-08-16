@@ -1,10 +1,11 @@
+using Humanizer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using VistaAzul.Dto;
 using VistaAzul.Modelos;
 
@@ -27,7 +28,7 @@ namespace VistaAzul.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
-            var query = _context.Reservas.Include(r => r.Cliente);
+            var query = _context.Reservas.AsQueryable();
 
             int total = await query.CountAsync();
 
@@ -67,7 +68,6 @@ namespace VistaAzul.Controllers
         public async Task<ActionResult<ReservaDetalleDto>> GetReserva(int id)
         {
             var reserva = await _context.Reservas
-                .Include(r => r.Cliente)
                 .Where(r => r.Id == id)
                 .Select(r => new ReservaDetalleDto
                 {
@@ -112,7 +112,14 @@ namespace VistaAzul.Controllers
             if (DateTime.Now.Date > reserva.FechaEntrada.Date)
                 return BadRequest("No se puede modificar la reserva porque la fecha de entrada ya ha pasado.");
 
-            var habitacion = await _context.Habitaciones.FindAsync(dto.HabitacionNumero);
+            // Validar que la nueva fecha de entrada tampoco sea del pasado
+            if (dto.FechaEntrada.Date < DateTime.Today)
+                return BadRequest("La nueva fecha de entrada no puede ser una fecha en el pasado.");
+
+            var habitacion = await _context.Habitaciones
+                .AsNoTracking()
+                .FirstOrDefaultAsync(h => h.Numero == dto.HabitacionNumero);
+
             if (habitacion == null)
                 return NotFound("La habitacion especificada no existe.");
 
@@ -120,7 +127,9 @@ namespace VistaAzul.Controllers
             if (habitacion.EstaFueraDeServicio)
                 return BadRequest("No se puede asignar una habitacion que está fuera de servicio.");
 
-            var cliente = await _context.Clientes.FindAsync(dto.ClienteId);
+            var cliente = await _context.Clientes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == dto.ClienteId);
             if (cliente == null)
                 return NotFound("El cliente especificado no existe.");
 
@@ -153,9 +162,9 @@ namespace VistaAzul.Controllers
             if (clienteTieneReserva)
                 return BadRequest("El cliente ya tiene otra habitacion reservada en el mismo periodo.");
 
-            double costoTotal = cantidadDias * 10.0;
+            decimal costoTotal = cantidadDias * 10.0m;
             if (cliente.EsVIP)
-                costoTotal *= 0.90;
+                costoTotal *= 0.90m;
 
             reserva.FechaEntrada = dto.FechaEntrada;
             reserva.FechaSalida = dto.FechaSalida;
@@ -163,28 +172,28 @@ namespace VistaAzul.Controllers
             reserva.HabitacionNumero = dto.HabitacionNumero;
             reserva.Importe = costoTotal;
 
+            
+            var traza = new Traza
+              {
+                 FechaHora = DateTime.Now,
+                 Operacion = "MODIFICAR_RESERVA",
+                 TablaAfectada = "Reservas",
+                 RegistroId = reserva.Id.ToString(),
+                 Detalles = $"Reserva ID {reserva.Id} modificada. Nuevo periodo: {reserva.FechaEntrada:dd/MM/yyyy} - {reserva.FechaSalida:dd/MM/yyyy}. Nuevo importe: {reserva.Importe} USD."
+              };
+                _context.Trazas.Add(traza);
             try
             {
                 await _context.SaveChangesAsync();
-
-                var traza = new Traza
-                {
-                    FechaHora = DateTime.Now,
-                    Operacion = "MODIFICAR_RESERVA",
-                    TablaAfectada = "Reservas",
-                    RegistroId = reserva.Id.ToString(),
-                    Detalles = $"Reserva ID {reserva.Id} modificada. Nuevo periodo: {reserva.FechaEntrada:dd/MM/yyyy} - {reserva.FechaSalida:dd/MM/yyyy}. Nuevo importe: {reserva.Importe} USD."
-                };
-                _context.Trazas.Add(traza);
-                await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch(DbUpdateConcurrencyException)
             {
                 if (!ReservaExists(id))
-                    return NotFound();
-                throw;
-            }
+                return NotFound();
 
+              throw;
+            }
+           
             return Ok("Reserva actualizada correctamente.");
         }
 
@@ -193,6 +202,7 @@ namespace VistaAzul.Controllers
         public async Task<ActionResult<ReservaDetalleDto>> PostReserva(ReservaCrearDto dto)
         {
             var habitacion = await _context.Habitaciones
+                .AsNoTracking()
                 .FirstOrDefaultAsync(h => h.Numero == dto.HabitacionNumero);
             if (habitacion == null)
                 return NotFound("La habitacion no existe.");
@@ -201,6 +211,7 @@ namespace VistaAzul.Controllers
                 return BadRequest("No se puede reservar porque la habitacion esta fuera de servicio.");
 
             var cliente = await _context.Clientes
+                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == dto.ClienteId);
             if (cliente == null)
                 return NotFound("El cliente no existe.");
@@ -214,29 +225,31 @@ namespace VistaAzul.Controllers
             if (cantidadDias < 3)
                 return BadRequest("El periodo minimo de reserva es de tres dias.");
 
-            // Verificar disponibilidad de habitación (solo reservas no canceladas con fechas solapadas)
-            bool habitacionOcupada = await _context.Reservas
-                .AnyAsync(r => r.HabitacionNumero == dto.HabitacionNumero
-                               && !r.EstaCancelada
-                               && dto.FechaEntrada.Date <= r.FechaSalida.Date
-                               && dto.FechaSalida.Date >= r.FechaEntrada.Date);
+            //Verificar si el cliente tiene reserva o la habitacion esta ocupada
+            var conflicto = await _context.Reservas
+                .AsNoTracking()
+                .Where(r => !r.EstaCancelada
+                            && dto.FechaEntrada.Date <= r.FechaSalida.Date
+                            && dto.FechaSalida.Date >= r.FechaEntrada.Date
+                            && (r.HabitacionNumero == dto.HabitacionNumero || r.ClienteId == dto.ClienteId))
+                .Select(r => new {
+                    EsHabitacionOcupada = r.HabitacionNumero == dto.HabitacionNumero,
+                    EsClienteOcupado = r.ClienteId == dto.ClienteId
+                })
+                .FirstOrDefaultAsync();
 
-            if (habitacionOcupada)
-                return BadRequest("La habitacion no esta disponible para las fechas seleccionadas.");
+            if (conflicto != null)
+            {
+                if (conflicto.EsHabitacionOcupada)
+                    return BadRequest("La habitacion no esta disponible para las fechas seleccionadas.");
 
-            // Un cliente no puede tener dos reservas en el mismo periodo
-            bool clienteTieneReserva = await _context.Reservas
-                .AnyAsync(r => r.ClienteId == dto.ClienteId
-                               && !r.EstaCancelada
-                               && dto.FechaEntrada.Date <= r.FechaSalida.Date
-                               && dto.FechaSalida.Date >= r.FechaEntrada.Date);
+                if (conflicto.EsClienteOcupado)
+                    return BadRequest("Un cliente no puede reservar dos habitaciones en el mismo periodo.");
+            }
 
-            if (clienteTieneReserva)
-                return BadRequest("Un cliente no puede reservar dos habitaciones en el mismo periodo.");
-
-            double costoTotal = cantidadDias * 10.0;
+            decimal costoTotal = cantidadDias * 10.0m;
             if (cliente.EsVIP)
-                costoTotal *= 0.90;
+                costoTotal *= 0.90m;
 
             var nuevaReserva = new Reserva
             {
@@ -249,6 +262,8 @@ namespace VistaAzul.Controllers
                 EstaElClienteEnHostal = false,
                 EstaCancelada = false
             };
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
@@ -265,9 +280,11 @@ namespace VistaAzul.Controllers
                 };
                 _context.Trazas.Add(traza);
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (Exception)
             {
+                await transaction.RollbackAsync();
                 return StatusCode(500, "Error interno al procesar la reserva.");
             }
 
@@ -307,7 +324,7 @@ namespace VistaAzul.Controllers
                 return BadRequest("No se puede eliminar una reserva activa. Cancélela primero.");
 
             _context.Reservas.Remove(reserva);
-            await _context.SaveChangesAsync();
+            
 
             var traza = new Traza
             {
@@ -340,8 +357,6 @@ namespace VistaAzul.Controllers
             reserva.EstaCancelada = true;
             reserva.FechaCancelacion = DateTime.Now;
             reserva.MotivoCancelacion = dto.Motivo;
-
-            await _context.SaveChangesAsync();
 
             var traza = new Traza
             {
@@ -380,7 +395,6 @@ namespace VistaAzul.Controllers
                 return BadRequest("La fecha de salida de esta reserva ya pasó.");
 
             reserva.EstaElClienteEnHostal = true;
-            await _context.SaveChangesAsync();
 
             var traza = new Traza
             {
@@ -398,7 +412,7 @@ namespace VistaAzul.Controllers
 
         // POST: api/Reservas/5/cambiar-habitacion
         [HttpPost("{id}/cambiar-habitacion")]
-        public async Task<IActionResult> CambiarHabitacion(int id, [FromBody] int nuevaHabitacion)
+        public async Task<IActionResult> CambiarHabitacion(int id, [FromBody] CambiarHabitacionDto dto)
         {
             var reserva = await _context.Reservas.FindAsync(id);
             if (reserva == null)
@@ -411,31 +425,31 @@ namespace VistaAzul.Controllers
             if (!reserva.EstaElClienteEnHostal)
                 return BadRequest("Solo se puede cambiar de habitacion a un cliente que ya se encuentra en el hostal.");
 
-            var habitacion = await _context.Habitaciones.FindAsync(nuevaHabitacion);
+            var habitacion = await _context.Habitaciones
+                .AsNoTracking()
+                .FirstOrDefaultAsync(h => h.Numero == dto.NuevaHabitacion);
             if (habitacion == null)
                 return NotFound("La habitacion especificada no existe.");
 
             if (habitacion.EstaFueraDeServicio)
                 return BadRequest("La nueva habitacion se encuentra fuera de servicio.");
 
-            if (reserva.HabitacionNumero == nuevaHabitacion)
+            if (reserva.HabitacionNumero == dto.NuevaHabitacion)
                 return BadRequest("El cliente ya se encuentra en esa habitacion.");
 
             // Verificar que la nueva habitación esté disponible para el período restante de la reserva
             bool habitacionOcupada = await _context.Reservas
                 .AnyAsync(r => r.Id != id
-                               && r.HabitacionNumero == nuevaHabitacion
+                               && r.HabitacionNumero == dto.NuevaHabitacion
                                && !r.EstaCancelada
-                               && reserva.FechaEntrada.Date <= r.FechaSalida.Date
+                               && DateTime.Today <= r.FechaSalida.Date
                                && reserva.FechaSalida.Date >= r.FechaEntrada.Date);
 
             if (habitacionOcupada)
                 return BadRequest("La nueva habitacion esta ocupada en el periodo de la reserva.");
 
             int habitacionAnterior = reserva.HabitacionNumero;
-            reserva.HabitacionNumero = nuevaHabitacion;
-
-            await _context.SaveChangesAsync();
+            reserva.HabitacionNumero = dto.NuevaHabitacion;
 
             var traza = new Traza
             {
@@ -443,7 +457,7 @@ namespace VistaAzul.Controllers
                 Operacion = "CAMBIAR_HABITACION",
                 TablaAfectada = "Reservas",
                 RegistroId = reserva.Id.ToString(),
-                Detalles = $"El cliente de la reserva ID {reserva.Id} fue cambiado de la habitacion {habitacionAnterior} a la habitacion {nuevaHabitacion}."
+                Detalles = $"El cliente de la reserva ID {reserva.Id} fue cambiado de la habitacion {habitacionAnterior} a la habitacion {dto.NuevaHabitacion}."
             };
             _context.Trazas.Add(traza);
             await _context.SaveChangesAsync();

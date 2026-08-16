@@ -18,8 +18,9 @@ namespace VistaAzul.Modelos
         [Required]
         public DateTime FechaSalida { get; set; }
 
+        [Column(TypeName = "decimal(18,2)")]
         [Required]
-        public double Importe { get; set; }
+        public decimal Importe { get; set; }
         
         [Required]
         public int ClienteId { get; set; }

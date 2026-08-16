@@ -30,7 +30,7 @@ namespace VistaAzul.Modelos
                 .UsingEntity(j => j.ToTable("HabitacionAmaDeLlaves"));
 
             // --- SEED DATA ---
-            /*
+            
             var habitacionesSeed = new List<Habitacion>();
             for (int piso = 1; piso <= 3; piso++)
                 for (int hab = 1; hab <= 5; hab++)
@@ -48,7 +48,7 @@ namespace VistaAzul.Modelos
                 new AmaDeLlaves { Id = 1, NombreApellidos = "Elena Garcia Fernandez", CI = "85031445678", NumeroTelefono = "+5353334445" },
                 new AmaDeLlaves { Id = 2, NombreApellidos = "Rosa Martinez Perez",    CI = "89110298765", NumeroTelefono = "+5355556667" }
             );
-            */
+            
         }
     }
 }
