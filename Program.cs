@@ -31,6 +31,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Apply pending EF Core migrations on startup so a fresh database gets its schema and seed data.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<VistaAzulDbContext>();
+    db.Database.Migrate();
+}
+
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.UseMiddleware<VistaAzul.Middlewares.ErrorHandlingMiddleware>();
