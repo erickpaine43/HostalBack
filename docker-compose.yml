@@ -7,7 +7,7 @@ services:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Server=hostal_db.mssql.somee.com;Database=hostal_db;User Id=REEMPLAZA_USUARIO;Password=REEMPLAZA_PASSWORD;TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING:?Set DB_CONNECTION_STRING in .env}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
